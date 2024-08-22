@@ -156,6 +156,8 @@ func parseProtoFile(filePath string) (classPath string, neededImports []string, 
 	}
 
 	registers := map[string]string{}
+	repeated := false
+	packed := false
 	constRegex := regexp.MustCompile(`const/\d+ (\w+), (0x[0-9a-fA-F]+)`)
 	sgetObjectRegex := regexp.MustCompile(`sget-object (\w+), L([^;]+);->(\w+):L[^;]+;`)
 	igetObjectRegex := regexp.MustCompile(`iget-object (\w+), \w+, L[^;]+;->(\w+):L[^;]+;`)
@@ -192,9 +194,28 @@ func parseProtoFile(filePath string) (classPath string, neededImports []string, 
 			register := matches[1]
 			// set register to hold field name
 			registers[register] = matches[2]
-		} else if strings.Contains(line, "Lcom/squareup/wire/ProtoAdapter;->asRepeated()Lcom/squareup/wire/ProtoAdapter;") ||
-			strings.Contains(line, "Lcom/squareup/wire/ProtoAdapter;->asPacked()Lcom/squareup/wire/ProtoAdapter;") {
-			// handle edge case where the type is moved to a register
+		} else if strings.Contains(line, "Lcom/squareup/wire/ProtoAdapter;->asRepeated()Lcom/squareup/wire/ProtoAdapter;") {
+			// set repeated to true
+			repeated = true
+
+			// parse invoke-virtual line
+			sourceRegister := strings.Split(strings.Split(line, "{")[1], "}")[0]
+
+			// wait for move-result-object
+			for !strings.Contains(lines[functionIdx], "move-result-object") {
+				functionIdx++
+			}
+
+			// parse move-result-object line
+			matches := moveResultObjectRegex.FindStringSubmatch(lines[functionIdx])
+			targetRegister := matches[1]
+
+			// relocate value
+			registers[targetRegister] = registers[sourceRegister]
+		} else if strings.Contains(line, "Lcom/squareup/wire/ProtoAdapter;->asPacked()Lcom/squareup/wire/ProtoAdapter;") {
+			// set packed to true
+			packed = true
+
 			// parse invoke-virtual line
 			sourceRegister := strings.Split(strings.Split(line, "{")[1], "}")[0]
 
@@ -218,11 +239,17 @@ func parseProtoFile(filePath string) (classPath string, neededImports []string, 
 
 			// create a new proto field
 			newField := ProtoField{
-				Name:  fieldName,
-				Value: tagId,
-				Type:  typeName,
+				Name:     fieldName,
+				Value:    tagId,
+				Type:     typeName,
+				Repeated: repeated,
+				Packed:   packed,
 			}
 			protoFields = append(protoFields, newField)
+
+			// reset repeated and packed
+			repeated = false
+			packed = false
 			if strings.Contains(filePath, "tyc.smali") {
 				fmt.Println(classPath, newField)
 			}

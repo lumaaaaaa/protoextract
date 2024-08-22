@@ -2,7 +2,9 @@ package main
 
 // ProtoField represents a field in a protobuf message (name:value pair with a data type)
 type ProtoField struct {
-	Name  string
-	Type  string
-	Value int
+	Name     string
+	Type     string
+	Value    int
+	Repeated bool
+	Packed   bool
 }

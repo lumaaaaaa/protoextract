@@ -38,8 +38,13 @@ func generateProtoFileContent(classPath string, neededImports []string, protoFie
 
 		// add the fields
 		for _, protoField := range protoFields {
-			// TODO: handle other tags, everything is optional right now
-			content += fmt.Sprintf("  optional %s %s = %d;\n", protoField.Type, protoField.Name, protoField.Value)
+			if protoField.Repeated {
+				content += fmt.Sprintf("  %s %s %s = %d;\n", "repeated", protoField.Type, protoField.Name, protoField.Value)
+			} else if protoField.Packed {
+				content += fmt.Sprintf("  %s %s %s = %d [packed=true];\n", "repeated", protoField.Type, protoField.Name, protoField.Value)
+			} else {
+				content += fmt.Sprintf("  %s %s %s = %d;\n", "optional", protoField.Type, protoField.Name, protoField.Value)
+			}
 		}
 
 		// close the message definition
