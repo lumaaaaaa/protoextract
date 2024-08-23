@@ -49,7 +49,7 @@ func main() {
 		// parse the .proto file
 		classPath, neededImports, protoFields, err := parseProtoFile(filePath)
 		if err != nil {
-			fmt.Printf("[x] Error parsing .proto file: '%s'\n", err)
+			fmt.Printf("[x] Error parsing '%s' file: '%s'\n", filePath, err)
 			continue
 		}
 
@@ -92,7 +92,7 @@ func main() {
 		// parse the .proto file
 		classPath, protoFields, err := parseWireEnum(filePath)
 		if err != nil {
-			fmt.Printf("[x] Error parsing .proto file: '%s'\n", err)
+			fmt.Printf("[x] Error parsing '%s' file: '%s'\n", filePath, err)
 			continue
 		}
 
