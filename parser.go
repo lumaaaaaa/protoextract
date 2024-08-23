@@ -31,7 +31,7 @@ func parseWireEnum(filePath string) (classPath string, protoFields []ProtoField,
 	for classPath == "" && functionIdx < len(lines) {
 		matches := classPathRegex.FindStringSubmatch(lines[functionIdx])
 		if matches != nil {
-			classPath = matches[1]
+			classPath = strings.ReplaceAll(matches[1], "$", "_")
 		}
 		functionIdx++
 	}
@@ -146,15 +146,6 @@ func parseProtoFile(filePath string) (classPath string, neededImports []string, 
 		functionIdx++
 	}
 
-	// update functionIdx to the point where the tags get read
-	for functionIdx < len(lines) {
-		if strings.Contains(lines[functionIdx], "return-void") {
-			functionIdx++
-			break
-		}
-		functionIdx++
-	}
-
 	registers := map[string]string{}
 	repeated := false
 	packed := false
@@ -181,7 +172,7 @@ func parseProtoFile(filePath string) (classPath string, neededImports []string, 
 			register := matches[1]
 			if matches[3] == "ADAPTER" {
 				// add an import
-				importClass := matches[2]
+				importClass := strings.ReplaceAll(matches[2], "$", "_")
 				neededImports = append(neededImports, importClass)
 				classSplit := strings.Split(importClass, "/")
 				registers[register] = classSplit[len(classSplit)-1]
@@ -250,10 +241,7 @@ func parseProtoFile(filePath string) (classPath string, neededImports []string, 
 			// reset repeated and packed
 			repeated = false
 			packed = false
-			if strings.Contains(filePath, "tyc.smali") {
-				fmt.Println(classPath, newField)
-			}
-		} else if strings.Contains(line, "return-void") {
+		} else if strings.Contains(line, ".end method") {
 			// terminate
 			return classPath, neededImports, protoFields, nil
 		}

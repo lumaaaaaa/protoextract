@@ -10,9 +10,10 @@ import (
 
 const (
 	// the magic string that identifies a protobuf class
-	protoEncode = ".method public final encode(Lcom/squareup/wire/ProtoWriter;Ljava/lang/Object;)V"
-	protoEnum   = ".implements Lcom/squareup/wire/WireEnum;"
-	protoHeader = "/* Generated using https://github.com/lumaaaaaa/protoextract\n * Definitions may contain inaccuracies. */\nsyntax = \"proto2\";"
+	protoEncode   = ".method public final encode(Lcom/squareup/wire/ProtoWriter;Ljava/lang/Object;)V"
+	protoEnum     = ".implements Lcom/squareup/wire/WireEnum;"
+	protoHeader   = "/* Generated using https://github.com/lumaaaaaa/protoextract\n * Definitions may contain inaccuracies. */\nsyntax = \"proto2\";"
+	excludeStdlib = ".class public final Lcom/squareup/wire"
 )
 
 func generateProtoFileContent(classPath string, neededImports []string, protoFields []ProtoField, enum bool) string {
@@ -115,7 +116,7 @@ func checkEncode(path string, di fs.DirEntry, _ error) error {
 		}
 
 		// check if the file contains the protobuf decode method
-		if strings.Contains(string(file), protoEncode) {
+		if strings.Contains(string(file), protoEncode) && !strings.Contains(string(file), excludeStdlib) {
 			protoMessageFiles = append(protoMessageFiles, path)
 		}
 	}
