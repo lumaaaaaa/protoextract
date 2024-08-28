@@ -16,9 +16,12 @@ const (
 	excludeStdlib = ".class public final Lcom/squareup/wire"
 )
 
-func generateProtoFileContent(classPath string, neededImports []string, protoFields []ProtoField, enum bool) string {
+func generateProtoFileContent(packageName, classPath string, neededImports []string, protoFields []ProtoField, enum bool) string {
 	// initialize the content with the proto3 header
 	content := fmt.Sprintf("%s\n\n", protoHeader)
+
+	// add the package name
+	content += fmt.Sprintf("package %s;\n\n", packageName)
 
 	if !enum {
 		// remove duplicates from the needed imports

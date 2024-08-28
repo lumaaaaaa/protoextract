@@ -17,16 +17,19 @@ var (
 
 func main() {
 	// parse arguments
-	if len(os.Args) < 2 {
-		fmt.Println("[x] Usage: protoextract <decompiled apk dir>")
+	if len(os.Args) < 3 {
+		fmt.Println("[x] Usage: protoextract <package name> <decompiled apk dir>")
 		os.Exit(1)
 	}
+
+	// store the package name
+	packageName := os.Args[1]
 
 	// store start time
 	startTime := time.Now()
 
 	// create the output directory
-	baseDir := os.Args[1]
+	baseDir := os.Args[2]
 	outputDir := baseDir + "_protoextract/proto"
 	err := os.MkdirAll(outputDir, 0755)
 	if err != nil {
@@ -69,7 +72,7 @@ func main() {
 		}
 
 		// write the .proto file
-		_, err = protoFile.WriteString(generateProtoFileContent(classPath, neededImports, protoFields, false))
+		_, err = protoFile.WriteString(generateProtoFileContent(packageName, classPath, neededImports, protoFields, false))
 		if err != nil {
 			fmt.Printf("[x] Error writing .proto file: '%s'\n", err)
 			continue
@@ -112,7 +115,7 @@ func main() {
 		}
 
 		// write the .proto file
-		_, err = protoFile.WriteString(generateProtoFileContent(classPath, nil, protoFields, true))
+		_, err = protoFile.WriteString(generateProtoFileContent(packageName, classPath, nil, protoFields, true))
 		if err != nil {
 			fmt.Printf("[x] Error writing .proto file: '%s'\n", err)
 			continue

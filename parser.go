@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -144,6 +145,32 @@ func parseProtoFile(filePath string) (classPath string, neededImports []string, 
 			classPath = matches[1]
 		}
 		functionIdx++
+	}
+
+	// check if the class path is stdlib (proto class is empty)
+	if classPath == "com/squareup/wire/Message" {
+		// parse class path using fallback method
+		fallbackRegex := regexp.MustCompile(`value\s*=\s*L([^;]+);`)
+
+		// find the line to parse
+		functionIdx = 0
+		for i, line := range lines {
+			if line == ".annotation system Ldalvik/annotation/EnclosingClass;" {
+				functionIdx = i + 1
+				break
+			}
+		}
+
+		// parse the class path
+		fallbackRegexMatches := fallbackRegex.FindStringSubmatch(lines[functionIdx])
+		if fallbackRegexMatches != nil {
+			classPath = fallbackRegexMatches[1]
+
+			return classPath, neededImports, protoFields, nil
+		}
+
+		// return the error
+		return classPath, neededImports, protoFields, errors.New("failed to resolve empty message name")
 	}
 
 	registers := map[string]string{}
